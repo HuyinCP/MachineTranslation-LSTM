@@ -1,17 +1,17 @@
-# NMT English → Vietnamese (RNN + Attention, from scratch)
+# English to Vietnamese (RNN + Attention, from scratch)
 
 reimplementing a neural machine translation (NMT) model
 for English Vietnamese from scratch in PyTorch, deliberately split into two
 stages so the underlying mechanisms are understood before adding refinements:
 
-1. **Stage 1 — Plain Seq2Seq LSTM, NO Attention** *(in progress)*: the Encoder
+1. **Stage 1: Plain Seq2Seq LSTM, NO Attention** *(in progress)*: the Encoder
    compresses the entire source sentence into a single context vector (its
    final hidden/cell state), and the Decoder decodes from that. The goal is to
    actually feel the "bottleneck" limitation of the original Seq2Seq
    architecture firsthand.
-2. **Stage 2 — Add Luong Attention** *(not started)*: based on
+2. **Stage 2: Add Luong Attention** *(not started)*: based on
    Luong, Pham, Manning (2015), *"Effective Approaches to Attention-based
-   Neural Machine Translation"* — the Encoder returns all hidden states, and
+   Neural Machine Translation"* the Encoder returns all hidden states, and
    the Decoder attends over them (dot / general / concat scoring) with input
    feeding, then BLEU is compared against the Stage 1 baseline to see exactly
    what Attention improves.
@@ -37,21 +37,21 @@ mirrored from the GitHub repo `stefan-it/nmt-en-vi`), extracted into
 
 ## LSTM mechanics (foundation for both stages)
 
-A vanilla RNN can suffer from *vanishing gradients* on long sequences — the
+A vanilla RNN can suffer from *vanishing gradients* on long sequences  the
 gradient shrinks toward zero across time steps, causing the model to "forget"
 early context. LSTM fixes this by adding a separate memory path called the
 **cell state** $c_t$, updated through **addition** instead of repeated
-multiplication — which keeps gradients more stable.
+multiplication  which keeps gradients more stable.
 
 At each time step, given the current input $x_t$, the previous hidden state
 $h_{t-1}$, and the previous cell state $c_{t-1}$:
 
 $$
 \begin{aligned}
-i_t &= \sigma(x_t W_{xi} + h_{t-1} W_{hi} + b_i) && \text{Input gate — how much new information to add} \\
-f_t &= \sigma(x_t W_{xf} + h_{t-1} W_{hf} + b_f) && \text{Forget gate — how much old memory to keep} \\
-\tilde{c}_t &= \tanh(x_t W_{xc} + h_{t-1} W_{hc} + b_c) && \text{Candidate — the new content that could be written} \\
-o_t &= \sigma(x_t W_{xo} + h_{t-1} W_{ho} + b_o) && \text{Output gate — how much of the cell state is exposed as hidden state}
+i_t &= \sigma(x_t W_{xi} + h_{t-1} W_{hi} + b_i) && \text{Input gate  how much new information to add} \\
+f_t &= \sigma(x_t W_{xf} + h_{t-1} W_{hf} + b_f) && \text{Forget gate  how much old memory to keep} \\
+\tilde{c}_t &= \tanh(x_t W_{xc} + h_{t-1} W_{hc} + b_c) && \text{Candidate  the new content that could be written} \\
+o_t &= \sigma(x_t W_{xo} + h_{t-1} W_{ho} + b_o) && \text{Output gate  how much of the cell state is exposed as hidden state}
 \end{aligned}
 $$
 
@@ -65,7 +65,7 @@ $$
 h_t = o_t \odot \tanh(c_t)
 $$
 
-The **addition** in the $c_t$ equation is the "memory highway" — a direct path
+The **addition** in the $c_t$ equation is the "memory highway"  a direct path
 that keeps gradients from vanishing across many steps the way they do in a
 vanilla RNN.
 
@@ -90,12 +90,12 @@ implementation.
 During training, instead of letting the Decoder feed on its own previous
 prediction (which can compound errors if it guesses wrong early on), we
 "force" the input at step $t$ to be the **ground-truth** token $y^{(t-1)}$
-from the label — hence *teacher forcing*. The Encoder processes the entire
+from the label  hence *teacher forcing*. The Encoder processes the entire
 source sentence, and its final state (`Encoded State`) initializes the
 Decoder; the Decoder then generates each $\hat{y}^{(t)}$ one at a time, always
 receiving the **real** token as input for the next step during training (at
 inference time there is no label, so it must feed on its own $\hat{y}^{(t)}$
-instead — an important train/inference discrepancy to keep in mind).
+instead  an important train/inference discrepancy to keep in mind).
 
 ## Directory layout
 
@@ -107,14 +107,14 @@ D:\AIResearcher\
 │   │   ├── raw\                   # the 6 downloaded + extracted IWSLT15 en-vi files
 │   │   └── processed\             # vocab (.pkl) + numericalized data
 │   ├── notebooks\
-│   │   ├── 02_preprocess.ipynb    # done — tokenize (EN: regex, VI: underthesea), build Vocab, save pickles
-│   │   ├── 03_dataset.ipynb       # done — Dataset + DataLoader, padding, tgt_input/tgt_output split
-│   │   └── 04_model_rnn_basics.ipynb  # in progress — LSTM cell (theory + hand-coded), Encoder/Decoder WITHOUT Attention
+│   │   ├── 02_preprocess.ipynb    # done  tokenize (EN: regex, VI: underthesea), build Vocab, save pickles
+│   │   ├── 03_dataset.ipynb       # done  Dataset + DataLoader, padding, tgt_input/tgt_output split
+│   │   └── 04_model_rnn_basics.ipynb  # in progress  LSTM cell (theory + hand-coded), Encoder/Decoder WITHOUT Attention
 │   ├── scripts\
 │   │   └── download_data.sh       # download + extract the dataset
 │   └── src\
 │       └── vocab.py               # shared Vocab class across notebooks (word2idx/idx2word, encode/decode)
-├── tensor\                         # separate self-attention/transformer study notebooks — NOT part of this project
+├── tensor\                         # separate self-attention/transformer study notebooks  NOT part of this project
 ├── venv\                           # Python virtualenv
 └── requirements.txt
 ```
@@ -147,5 +147,5 @@ using Jupyter/VSCode.
 ## Tech stack
 
 Python + PyTorch (`nn.LSTM`, `nn.LSTMCell`, `nn.Embedding`, real autograd
-training — no hand-written backprop). Vietnamese tokenization via
+training  no hand-written backprop). Vietnamese tokenization via
 `underthesea`. The entire pipeline is written as Jupyter Notebooks.

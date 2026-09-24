@@ -1,7 +1,7 @@
 # NMT English → Vietnamese (RNN + Attention, from scratch)
 
-A learning project: reimplementing a neural machine translation (NMT) model
-for English → Vietnamese from scratch in PyTorch, deliberately split into two
+reimplementing a neural machine translation (NMT) model
+for English Vietnamese from scratch in PyTorch, deliberately split into two
 stages so the underlying mechanisms are understood before adding refinements:
 
 1. **Stage 1 — Plain Seq2Seq LSTM, NO Attention** *(in progress)*: the Encoder

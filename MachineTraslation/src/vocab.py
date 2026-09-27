@@ -12,7 +12,9 @@ class Vocab:
             '<eos>': 2, 
             '<unk>': 3
         }
+        self.MOST_COMMON = counter.most_common(1)
 
+        print(f"Most commom {self.MOST_COMMON}")
         for word, freq in counter.most_common(max_size):
             if freq > min_freq:
                 self.word2idx[word] = len(self.word2idx)

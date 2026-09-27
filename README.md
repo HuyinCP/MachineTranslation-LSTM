@@ -1,61 +1,88 @@
-# English to Vietnamese (RNN + Attention, from scratch)
+# English-to-Vietnamese Neural Machine Translation
 
-reimplementing a neural machine translation (NMT) model
-for English Vietnamese from scratch in PyTorch, deliberately split into two
-stages so the underlying mechanisms are understood before adding refinements:
+This project builds an English-to-Vietnamese neural machine translation system with PyTorch. It is written as a learning project, so the notebooks explain the main ideas behind the model instead of hiding everything inside a high-level training framework.
 
-1. **Stage 1: Plain Seq2Seq LSTM, NO Attention** *(in progress)*: the Encoder
-   compresses the entire source sentence into a single context vector (its
-   final hidden/cell state), and the Decoder decodes from that. The goal is to
-   actually feel the "bottleneck" limitation of the original Seq2Seq
-   architecture firsthand.
-2. **Stage 2: Add Luong Attention** *(not started)*: based on
-   Luong, Pham, Manning (2015), *"Effective Approaches to Attention-based
-   Neural Machine Translation"* the Encoder returns all hidden states, and
-   the Decoder attends over them (dot / general / concat scoring) with input
-   feeding, then BLEU is compared against the Stage 1 baseline to see exactly
-   what Attention improves.
+The project starts with the original Seq2Seq architecture: an LSTM encoder reads an English sentence and a decoder generates the Vietnamese translation. This first version does not use attention. That limitation is intentional because it makes the information bottleneck of the original Seq2Seq model easier to understand before studying attention-based translation.
 
-Code favors clarity and comments explaining *why*, not performance. When
-learning a new mechanism (LSTM cell, Attention...), always hand-code it first
-and cross-check against the equivalent PyTorch module (`nn.LSTMCell`) before
-switching to the built-in module (`nn.LSTM`) for the rest.
+## The Translation Problem
 
-## Dataset
+The model receives a source sentence in English and predicts a target sentence in Vietnamese. For example:
 
-[IWSLT15 English-Vietnamese](https://nlp.stanford.edu/projects/nmt/) (Stanford NLP Group):
+```text
+English:  I am a student.
+Vietnamese: Tôi là một sinh viên.
+```
 
-| Split | File | Sentences |
-|---|---|---|
-| train | `train.en` / `train.vi` | 133,317 |
-| dev | `tst2012.en` / `tst2012.vi` | 1,553 |
-| test | `tst2013.en` / `tst2013.vi` | 1,268 |
+Every sentence pair is converted into a sequence of token IDs. The source sequence is given to the encoder. The decoder then predicts one Vietnamese token at a time until it produces the `<eos>` token.
 
-Downloaded via `MachineTraslation/scripts/download_data.sh` (uses `curl -L`,
-mirrored from the GitHub repo `stefan-it/nmt-en-vi`), extracted into
-`MachineTraslation/data/raw/`.
+The dataset used by this project is the IWSLT15 English-Vietnamese corpus. The raw files are stored in `MachineTraslation/data/raw/` and contain separate English and Vietnamese files for the training, development, and test splits.
 
-## LSTM mechanics (foundation for both stages)
+## How the Solution Works
 
-A vanilla RNN can suffer from *vanishing gradients* on long sequences  the
-gradient shrinks toward zero across time steps, causing the model to "forget"
-early context. LSTM fixes this by adding a separate memory path called the
-**cell state** $c_t$, updated through **addition** instead of repeated
-multiplication  which keeps gradients more stable.
+### Preparing the data
 
-At each time step, given the current input $x_t$, the previous hidden state
-$h_{t-1}$, and the previous cell state $c_{t-1}$:
+The preprocessing pipeline performs the following operations:
+
+1. Read the parallel English and Vietnamese sentences.
+2. Tokenize English with a small regex-based tokenizer.
+3. Tokenize Vietnamese with `underthesea`.
+4. Build one vocabulary for each language using the training split.
+5. Remove empty or overly long sentence pairs.
+6. Convert tokens into integer IDs and add `<bos>` and `<eos>` markers.
+7. Save the vocabularies and processed sentence pairs in `data/processed/`.
+
+The vocabulary reserves four special tokens:
+
+```text
+<pad>  0
+<bos>  1
+<eos>  2
+<unk>  3
+```
+
+### Batching variable-length sentences
+
+Sentences do not all have the same length, so a batch is padded to the length of its longest sentence. The dataset notebook creates:
+
+- `src_batch`: padded English input for the encoder;
+- `src_lengths`: original source lengths before padding;
+- `tgt_input`: decoder input beginning with `<bos>`;
+- `tgt_output`: training targets ending with `<eos>`.
+
+The decoder input and target are shifted by one position. For a target sequence such as:
+
+```text
+<bos> I am a student <eos>
+```
+
+the decoder receives:
+
+```text
+<bos> I am a student
+```
+
+and the expected output is:
+
+```text
+I am a student <eos>
+```
+
+### The LSTM encoder and decoder
+
+An LSTM keeps two states at each time step: the hidden state `$h_t$` and the cell state `$c_t$`. The cell state provides an additive memory path that helps information and gradients travel across long sequences.
+
+Using the row-vector convention, the four LSTM components are:
 
 $$
 \begin{aligned}
-i_t &= \sigma(x_t W_{xi} + h_{t-1} W_{hi} + b_i) && \text{Input gate  how much new information to add} \\
-f_t &= \sigma(x_t W_{xf} + h_{t-1} W_{hf} + b_f) && \text{Forget gate  how much old memory to keep} \\
-\tilde{c}_t &= \tanh(x_t W_{xc} + h_{t-1} W_{hc} + b_c) && \text{Candidate  the new content that could be written} \\
-o_t &= \sigma(x_t W_{xo} + h_{t-1} W_{ho} + b_o) && \text{Output gate  how much of the cell state is exposed as hidden state}
+i_t &= \sigma(x_t W_{xi} + h_{t-1} W_{hi} + b_i), \\
+f_t &= \sigma(x_t W_{xf} + h_{t-1} W_{hf} + b_f), \\
+\tilde{c}_t &= \tanh(x_t W_{xc} + h_{t-1} W_{hc} + b_c), \\
+o_t &= \sigma(x_t W_{xo} + h_{t-1} W_{ho} + b_o).
 \end{aligned}
 $$
 
-The cell state and hidden state are then updated as:
+The cell state and hidden state are updated as follows:
 
 $$
 c_t = f_t \odot c_{t-1} + i_t \odot \tilde{c}_t
@@ -65,87 +92,66 @@ $$
 h_t = o_t \odot \tanh(c_t)
 $$
 
-The **addition** in the $c_t$ equation is the "memory highway"  a direct path
-that keeps gradients from vanishing across many steps the way they do in a
-vanilla RNN.
-
 ![LSTM cell architecture](images/architecture.png)
 
-*Yellow nodes = element-wise multiplication ($\odot$), green nodes =
-element-wise addition. The diagram maps directly onto the four equations
-above: `Forget Gate` → $f_t$, `Input Gate` → $i_t$ and $\tilde{c}_t$,
-`Output Gate` → $o_t$, and the top horizontal line (`Cell State`) is the
-additive path $c_{t-1} \to c_t$.*
+The encoder reads the English sequence and passes its final hidden state and cell state to the decoder. The decoder uses those states to begin generating the Vietnamese sequence. Because the encoder passes only its final states, the entire source sentence must be compressed into a fixed-size representation. This is the final-state bottleneck of the plain Seq2Seq model, and it becomes especially difficult for long sentences.
 
-A step-by-step walkthrough (forget → input/candidate → cell state update →
-output) is available in
-`MachineTraslation/notebooks/04_model_rnn_basics.ipynb`, along with a
-hand-written `nn.LSTMCell` cross-check against the actual PyTorch
-implementation.
+### Teacher Forcing
 
-## Teacher Forcing (used when training the Decoder)
+During training, the decoder usually receives the correct previous Vietnamese token as its next input. This is called Teacher Forcing. It gives the decoder a reliable input at every step while it learns the mapping from the encoder state to the target sentence.
+
+At inference time, the correct target sentence is unavailable. The decoder must instead feed its own previous prediction into the next step. This difference between training and inference is an important property of Seq2Seq models.
 
 ![Teacher Forcing](images/teacher_forcing.png)
 
-During training, instead of letting the Decoder feed on its own previous
-prediction (which can compound errors if it guesses wrong early on), we
-"force" the input at step $t$ to be the **ground-truth** token $y^{(t-1)}$
-from the label  hence *teacher forcing*. The Encoder processes the entire
-source sentence, and its final state (`Encoded State`) initializes the
-Decoder; the Decoder then generates each $\hat{y}^{(t)}$ one at a time, always
-receiving the **real** token as input for the next step during training (at
-inference time there is no label, so it must feed on its own $\hat{y}^{(t)}$
-instead  an important train/inference discrepancy to keep in mind).
+## Notebook Guide
 
-## Directory layout
+The notebooks follow the data and model flow:
 
-```
+| Notebook | Purpose |
+|---|---|
+| [`02_preprocess.ipynb`](MachineTraslation/notebooks/02_preprocess.ipynb) | Read the raw corpus, tokenize both languages, build vocabularies, filter sentence pairs, and save processed data. |
+| [`03_dataset.ipynb`](MachineTraslation/notebooks/03_dataset.ipynb) | Load processed pairs, define `TranslationDataset`, pad batches, and create decoder inputs and targets. |
+| [`04_model_rnn_basics.ipynb`](MachineTraslation/notebooks/04_model_rnn_basics.ipynb) | Explain the LSTM gates and the plain Seq2Seq data setup without attention. |
+| [`04_test.ipynb`](MachineTraslation/notebooks/04_test.ipynb) | Compare a manually assembled LSTM step with `nn.LSTMCell` and sequence processing with `nn.LSTM`. |
+
+The manual LSTM implementation is used as a conceptual check. PyTorch combines the four gate parameters internally in `nn.LSTMCell`; `weight_ih` and `weight_hh` each contain parameters for all four gates rather than a single gate.
+
+## Project Structure
+
+```text
 D:\AIResearcher\
-├── images\                        # shared diagrams used by the notebooks (and this README)
-├── MachineTraslation\
-│   ├── data\
-│   │   ├── raw\                   # the 6 downloaded + extracted IWSLT15 en-vi files
-│   │   └── processed\             # vocab (.pkl) + numericalized data
-│   ├── notebooks\
-│   │   ├── 02_preprocess.ipynb    # done  tokenize (EN: regex, VI: underthesea), build Vocab, save pickles
-│   │   ├── 03_dataset.ipynb       # done  Dataset + DataLoader, padding, tgt_input/tgt_output split
-│   │   └── 04_model_rnn_basics.ipynb  # in progress  LSTM cell (theory + hand-coded), Encoder/Decoder WITHOUT Attention
-│   ├── scripts\
-│   │   └── download_data.sh       # download + extract the dataset
-│   └── src\
-│       └── vocab.py               # shared Vocab class across notebooks (word2idx/idx2word, encode/decode)
-├── tensor\                         # separate self-attention/transformer study notebooks  NOT part of this project
-├── venv\                           # Python virtualenv
-└── requirements.txt
+|-- images\
+|-- MachineTraslation\
+|   |-- data\
+|   |   |-- raw\
+|   |   |-- processed\
+|   |-- notebooks\
+|   |-- scripts\
+|   |-- src\
+|       |-- vocab.py
+|-- tensor\
+|-- requirements.txt
+|-- README.md
 ```
 
-Planned next steps: `05_train_baseline` (train + evaluate Stage 1) →
-`06_model_attention` (add Luong Attention) → `07_train_attention` →
-`08_evaluate` (BLEU) → `09_translate` (translate new sentences).
+The `tensor/` directory contains separate experiments and is not used by the NMT implementation.
 
-## Setup & running
+## Setup and Usage
 
-```bash
-# create venv, install dependencies
+Create a virtual environment and install the dependencies:
+
+```powershell
 python -m venv venv
 venv\Scripts\python.exe -m pip install -r requirements.txt
+```
 
-# download the IWSLT15 en-vi dataset
+To download the IWSLT15 files, run the download script from Git Bash or WSL:
+
+```bash
 bash MachineTraslation/scripts/download_data.sh
 ```
 
-**GPU (optional)**: `pip install torch` installs a CPU-only build by default.
-If you have an NVIDIA GPU, install the CUDA build matching your driver, e.g.
-(driver supporting CUDA 12.6):
-```bash
-venv\Scripts\python.exe -m pip install torch --index-url https://download.pytorch.org/whl/cu126
-```
+Then open the notebooks in `MachineTraslation/notebooks/` and run them in order. The preprocessing notebook should be run before the dataset and model notebooks because the later notebooks load the files written to `MachineTraslation/data/processed/`.
 
-Run the notebooks in numeric order inside `MachineTraslation/notebooks/`
-using Jupyter/VSCode.
-
-## Tech stack
-
-Python + PyTorch (`nn.LSTM`, `nn.LSTMCell`, `nn.Embedding`, real autograd
-training  no hand-written backprop). Vietnamese tokenization via
-`underthesea`. The entire pipeline is written as Jupyter Notebooks.
+The project uses Python, PyTorch, NumPy, `underthesea`, and Jupyter/IPython. PyTorch's automatic differentiation is used for model computation; the LSTM equations are implemented manually for understanding and comparison, not for replacing autograd.

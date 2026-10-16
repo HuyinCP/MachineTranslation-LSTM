@@ -2,6 +2,8 @@
 
 Tài liệu này theo thứ tự trình bày và hệ ký hiệu trong [bài của Coding Owen](https://codingowen.github.io/projects/recurrent_nn_from_scratch/) đến hết mục 2.3. Các công thức được dựng lại theo 14 ảnh người dùng chụp; phần giải thích tiếng Việt và sơ đồ được viết cho dự án này. Phần code hoàn chỉnh chưa làm; [notebook thử nghiệm ban đầu](experiments/01.ipynb) được lưu riêng trong `experiments/`.
 
+**Hướng thực hành của dự án:** dùng RNN thường cho bài toán dịch Anh–Việt, tận dụng dữ liệu đã xử lý của `MachineTraslation`. Xem [kế hoạch dùng dữ liệu và xây Seq2Seq RNN](TRANSLATION_PLAN.md). Phần công thức bên dưới vẫn giữ nguyên thứ tự của bài tham khảo.
+
 ## Mục lục
 
 1. [Recurrent Neural Network Overview](#1-recurrent-neural-network-overview)

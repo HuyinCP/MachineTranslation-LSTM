@@ -7,7 +7,7 @@ Kho lưu các dự án học tập về mạng nơ-ron. Mỗi dự án “from s
 | Thứ tự | Dự án | Tình trạng hiện tại | Bài tham khảo |
 |---|---|---|---|
 | 1 | [Neural Network from scratch](projects/01-neural-network-from-scratch/README.md) | Đã chuyển notebook Iris MLP dùng PyTorch vào `experiments/`; bản MNIST/NumPy chưa làm | [Coding Owen](https://codingowen.github.io/projects/neural_network_from_scratch/) |
-| 2 | [RNN from scratch](projects/02-rnn-from-scratch/README.md) | Đã có lý thuyết đến mục 2.3 và notebook thử nghiệm ban đầu; code hoàn chỉnh chưa làm | [Coding Owen](https://codingowen.github.io/projects/recurrent_nn_from_scratch/) |
+| 2 | [RNN from scratch](projects/02-rnn-from-scratch/README.md) | Đã có lý thuyết đến mục 2.3; [hướng thực hành](projects/02-rnn-from-scratch/TRANSLATION_PLAN.md) là dịch Anh–Việt bằng RNN, tận dụng dữ liệu NMT; code hoàn chỉnh chưa làm | [Coding Owen](https://codingowen.github.io/projects/recurrent_nn_from_scratch/) |
 | 3 | [LSTM from scratch](projects/03-lstm-from-scratch/README.md) | Đã tạo không gian dự án; chưa có bản triển khai độc lập | [Coding Owen](https://codingowen.github.io/projects/lstm_from_scratch/) |
 | 4 | [Self-Attention from scratch](projects/04-self-attention-from-scratch/README.md) | Đã tạo không gian dự án; chưa có bản triển khai độc lập | [Coding Owen](https://codingowen.github.io/projects/self_attention/) |
 | 5 | [Vision Transformer (ViT) from scratch](projects/05-vision-transformer-from-scratch/README.md) | Đã tạo không gian dự án; chưa có bản triển khai độc lập | [Coding Owen](https://codingowen.github.io/projects/vision_transformer/) |

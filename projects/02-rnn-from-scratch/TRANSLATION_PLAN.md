@@ -1,6 +1,6 @@
 # Dịch Anh–Việt bằng Seq2Seq RNN
 
-**Mục tiêu:** sau phần lý thuyết trong [README](README.md), xây một encoder–decoder dùng **RNN thường** để dịch Anh–Việt. Dự án này dùng lại dữ liệu đã chuẩn bị cho NMT, nhưng có mô hình và notebook huấn luyện riêng. Đây là một bài thực hành khác bài sinh văn bản trong [nguồn lý thuyết](https://codingowen.github.io/projects/recurrent_nn_from_scratch/).
+**Mục tiêu:** sau phần lý thuyết trong [README](README.md), xây một encoder–decoder dùng **RNN thường** để dịch Anh–Việt. Dự án này dùng lại dữ liệu đã chuẩn bị cho NMT, nhưng có mô hình và notebook huấn luyện riêng.
 
 ## Dữ liệu dùng chung
 

@@ -1,6 +1,6 @@
 # Neural Network from scratch
 
-**Tham khảo:** [Building a Neural Network from scratch](https://codingowen.github.io/projects/neural_network_from_scratch/) — bài toán phân loại chữ số MNIST bằng mạng hai lớp và NumPy.
+**Mục tiêu:** phân loại chữ số MNIST bằng mạng hai lớp và NumPy.
 
 ## Hiện có
 

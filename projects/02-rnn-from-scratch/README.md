@@ -1,6 +1,6 @@
 # Building a Recurrent Neural Network (RNN) from scratch — phần lý thuyết
 
-Tài liệu này theo thứ tự trình bày và hệ ký hiệu trong [bài của Coding Owen](https://codingowen.github.io/projects/recurrent_nn_from_scratch/) đến hết mục 2.3. Các công thức được dựng lại theo 14 ảnh người dùng chụp; phần giải thích tiếng Việt và sơ đồ được viết cho dự án này. Phần code hoàn chỉnh chưa làm; [notebook thử nghiệm ban đầu](experiments/01.ipynb) được lưu riêng trong `experiments/`.
+Tài liệu này trình bày lý thuyết và công thức đến hết mục 2.3 theo 14 ảnh người dùng cung cấp; phần giải thích tiếng Việt và sơ đồ được viết cho dự án này. Phần code hoàn chỉnh chưa làm; các notebook chuẩn bị dữ liệu nằm trong `experiments/`.
 
 **Hướng thực hành của dự án:** dùng RNN thường cho bài toán dịch Anh–Việt, tận dụng dữ liệu đã xử lý của `MachineTraslation`. Xem [kế hoạch dùng dữ liệu và xây Seq2Seq RNN](TRANSLATION_PLAN.md). Phần công thức bên dưới vẫn giữ nguyên thứ tự của bài tham khảo.
 
@@ -486,4 +486,4 @@ Nếu tích này liên tục co lại, gradient về những bước đầu **bi
 
 ---
 
-**Nguồn:** [Coding Owen — Building a Recurrent Neural Network (RNN) from scratch](https://codingowen.github.io/projects/recurrent_nn_from_scratch/). Công thức được chép lại từ 14 ảnh người dùng cung cấp theo đúng thứ tự đến hết mục 2.3.
+Công thức được trình bày theo đúng thứ tự của 14 ảnh người dùng cung cấp đến hết mục 2.3.

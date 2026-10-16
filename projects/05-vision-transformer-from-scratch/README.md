@@ -1,7 +1,5 @@
 # Vision Transformer (ViT) from scratch
 
-**Tham khảo:** [Building a Vision Transformer (ViT) from scratch](https://codingowen.github.io/projects/vision_transformer/).
-
 Thư mục này dành cho dự án ViT độc lập. Hiện chưa có bản triển khai ở đây.
 
 ## Dự kiến xây dựng

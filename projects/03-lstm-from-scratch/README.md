@@ -1,7 +1,5 @@
 # LSTM from scratch
 
-**Tham khảo:** [Building Long Short Term Memory (LSTM) from scratch](https://codingowen.github.io/projects/lstm_from_scratch/).
-
 Thư mục này dành cho dự án LSTM độc lập. Chưa có phần triển khai “from scratch” tại đây.
 
 ## Dự kiến xây dựng

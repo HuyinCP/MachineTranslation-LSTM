@@ -3,3 +3,4 @@ numpy
 ipykernel
 underthesea 
 sklearn
+sacrebleu

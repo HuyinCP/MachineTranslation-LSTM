@@ -4,3 +4,5 @@ CLAUDE.md
 AGENTS.md
 tensor
 MachineTraslation/src/__pycache__
+__pycache__/
+projects/02-rnn-from-scratch/checkpoints/

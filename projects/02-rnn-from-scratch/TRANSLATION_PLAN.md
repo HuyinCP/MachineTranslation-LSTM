@@ -1,31 +1,39 @@
-# Dịch Anh–Việt bằng Seq2Seq RNN
+# English-Vietnamese Translation with a Vanilla RNN
 
-**Mục tiêu:** sau phần lý thuyết trong [README](README.md), xây một encoder–decoder dùng **RNN thường** để dịch Anh–Việt. Dự án này dùng lại dữ liệu đã chuẩn bị cho NMT, nhưng có mô hình và notebook huấn luyện riêng.
+This project will build a small encoder-decoder translation model with vanilla RNN cells. Its preprocessing code and data live inside this project, so the experiments do not import from `MachineTraslation`.
 
-## Dữ liệu dùng chung
+## Project layout
 
-| Thành phần hiện có | Vai trò trong dự án RNN |
+| Path | Purpose |
 |---|---|
-| [02_preprocess.ipynb](../../MachineTraslation/notebooks/02_preprocess.ipynb) | Đọc cặp câu Anh–Việt, tokenize, xây `en_vocab`/`vi_vocab` và đổi câu thành token ID. Không cần tokenize lại nếu các file đã xử lý vẫn còn. |
-| [data/processed](../../MachineTraslation/data/processed) | Chứa `train_ids.pkl`, `dev_ids.pkl`, `test_ids.pkl`, `en_vocab.pkl`, `vi_vocab.pkl`. Mỗi mẫu là cặp `(src_ids, tgt_ids)`. |
-| [03_dataset.ipynb](../../MachineTraslation/notebooks/03_dataset.ipynb) | Minh họa `TranslationDataset`, padding, độ dài câu nguồn và cách dịch target một bước thành `tgt_input`/`tgt_output`. Có thể dùng cùng hợp đồng batch cho RNN. |
-| [src/vocab.py](../../MachineTraslation/src/vocab.py) | Định nghĩa `Vocab` được lưu trong các file pickle; khi tải vocabulary cần để module này import được. |
+| `src/vocab.py`, `src/text.py` | Vocabulary and shared tokenization. |
+| `src/data.py` | Checked corpus loading and the four-tensor batch contract. |
+| `src/model.py` | Manual RNN cell, encoder, decoder, and greedy decoding. |
+| `src/train.py` | Teacher-forced training, dev loss, gradient clipping, and best checkpoint. |
+| `src/inference.py`, `src/evaluate.py` | Sentence translation and tokenized SacreBLEU. |
+| `data/raw/` | English and Vietnamese sentence files, plus the original archives. |
+| `data/processed/` | Pickled vocabularies and token-ID sentence pairs. |
+| `experiments/02_preprocess.ipynb` | Read, tokenize, filter, and numericalize the raw sentence pairs. |
+| `experiments/03_dataset.ipynb` | Load the processed data and create padded batches. |
 
-`04_model_rnn_basics.ipynb` trong NMT giải thích **LSTM Seq2Seq** và tải lại dữ liệu đã xử lý. Nó không phải phần triển khai RNN thường của dự án này; phần code RNN sẽ được viết riêng.
+The data began as a copy of the existing English-Vietnamese corpus. Future preprocessing runs in this project write only to this project's `data/processed/` directory. The original `MachineTraslation` data remains available for its LSTM baseline.
 
-## Luồng mô hình dự kiến
+The existing vocabulary pickle files refer to the Python class `src.vocab.Vocab`. This project provides that same import path and preserves the vocabulary attributes needed to load those files. Start with a fresh notebook kernel when switching between projects so Python does not reuse an already imported `src` package from another project.
 
-1. **Encoder RNN** đọc từng token tiếng Anh và trả về trạng thái ẩn cuối. Trạng thái này tóm tắt câu nguồn để khởi tạo decoder.
-2. **Decoder RNN** nhận `<bos>`, trạng thái từ encoder và sinh từng token tiếng Việt. Trong huấn luyện, dùng `tgt_input` từ batch để **Teacher Forcing**; loss so với `tgt_output`, bỏ qua `<pad>`.
-3. Khi suy luận, decoder dùng token nó vừa dự đoán làm đầu vào bước kế tiếp và dừng ở `<eos>` hoặc giới hạn độ dài.
+## Notebook order
 
-Chỉ truyền trạng thái cuối từ encoder sang decoder tạo **nút thắt trạng thái cuối**: mọi thông tin câu nguồn phải nằm trong một vector cố định. RNN thường còn dễ gặp gradient biến mất trên câu dài, nên đây là baseline học tập để so sánh với [Seq2Seq LSTM không attention](../../MachineTraslation/README.md). Không thêm attention vào phiên bản đầu tiên.
+1. Run `02_preprocess.ipynb` when raw data changes or the processed files need to be rebuilt.
+2. Run `03_dataset.ipynb` to inspect token IDs, padding, source lengths, and shifted decoder inputs and targets.
+3. Follow `04_model.ipynb`, `05_train.ipynb`, and `06_evaluate.ipynb` for formulas, shapes, training, and evaluation.
 
-## Phạm vi triển khai sau phần lý thuyết
+Run the notebooks with `experiments/` as the working directory. Their short setup cell sets `PROJECT_ROOT` to its parent for imports and data paths.
 
-- Viết RNN cell, encoder và decoder rõ ràng trong dự án này; không lấy code từ `tensor/`.
-- Tải trực tiếp dữ liệu đã xử lý, tránh sao chép các file `.pkl` sang `projects/`.
-- Kiểm tra shape và một bước forward trước khi huấn luyện, rồi đánh giá trên dev/test của cùng bộ dữ liệu.
-- Giữ notebook preprocess/dataset gốc tại `MachineTraslation/notebooks/` vì pipeline dữ liệu đó còn phục vụ baseline LSTM.
+## Implemented model
 
-Tài liệu này mô tả quyết định và đường dẫn dùng chung; phần code sẽ được thực hiện sau.
+The encoder reads English tokens and passes its final hidden state to the decoder. During training, the decoder receives the previous reference token as input (Teacher Forcing) and predicts the next Vietnamese token. During inference, it uses its own previous prediction and stops at `<eos>` or a maximum length.
+
+Passing only the final encoder state creates an information bottleneck, especially for long sentences. This first model remains a plain RNN baseline without attention and does not use code from `tensor/`.
+
+With `projects/02-rnn-from-scratch` as the working directory, run `D:/AIResearcher/venv/Scripts/python.exe -m src.train`. The defaults are embedding size 128, hidden size 256, batch size 64, Adam learning rate 0.001, gradient clipping 1.0, at most 10 epochs, and patience 3. CUDA is selected when available. A complete run writes `checkpoints/best.pt` according to dev loss.
+
+Then run `python -m src.inference --text "How are you?"` and `python -m src.evaluate --split dev`. Only after selecting the checkpoint using dev loss should you run `python -m src.evaluate --split test`. SacreBLEU uses `BLEU(tokenize="none")` because both predictions and saved references use the same Vietnamese token segmentation. This is an internal comparison, not a benchmark against a different preprocessing pipeline.

@@ -1,8 +1,8 @@
 # Building a Recurrent Neural Network (RNN) from scratch — phần lý thuyết
 
-Tài liệu này trình bày lý thuyết và công thức đến hết mục 2.3 theo 14 ảnh người dùng cung cấp; phần giải thích tiếng Việt và sơ đồ được viết cho dự án này. Phần code hoàn chỉnh chưa làm; các notebook chuẩn bị dữ liệu nằm trong `experiments/`.
+The theory and formulas below cover sections 1–2.3. The manual Seq2Seq RNN implementation and its educational notebooks are now available in `src/` and `experiments/`.
 
-**Hướng thực hành của dự án:** dùng RNN thường cho bài toán dịch Anh–Việt, tận dụng dữ liệu đã xử lý của `MachineTraslation`. Xem [kế hoạch dùng dữ liệu và xây Seq2Seq RNN](TRANSLATION_PLAN.md). Phần công thức bên dưới vẫn giữ nguyên thứ tự của bài tham khảo.
+**Practical project:** build a vanilla RNN for English-Vietnamese translation using the local `src/`, `data/`, and `experiments/` directories. See the [translation plan](TRANSLATION_PLAN.md) for the project layout and notebook order. The theory and formulas below retain their existing structure.
 
 ## Mục lục
 

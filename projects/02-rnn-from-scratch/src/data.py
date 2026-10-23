@@ -79,10 +79,7 @@ def collate_pairs(batch: list[tuple[torch.Tensor, torch.Tensor]]) -> tuple[torch
 def make_loaders(corpus: Corpus, batch_size: int = 64) -> tuple[DataLoader, DataLoader, DataLoader]:
     """Shuffle training pairs while keeping development and test order stable."""
     return (
-        DataLoader(TranslationDataset(corpus.train_pairs), batch_size=batch_size,
-                   shuffle=True, collate_fn=collate_pairs),
-        DataLoader(TranslationDataset(corpus.dev_pairs), batch_size=batch_size,
-                   shuffle=False, collate_fn=collate_pairs),
-        DataLoader(TranslationDataset(corpus.test_pairs), batch_size=batch_size,
-                   shuffle=False, collate_fn=collate_pairs),
+        DataLoader(TranslationDataset(corpus.train_pairs), batch_size=batch_size, shuffle=True, collate_fn=collate_pairs),
+        DataLoader(TranslationDataset(corpus.dev_pairs), batch_size=batch_size, shuffle=False, collate_fn=collate_pairs),
+        DataLoader(TranslationDataset(corpus.test_pairs), batch_size=batch_size, shuffle=False, collate_fn=collate_pairs),
     )
